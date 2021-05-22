@@ -1,0 +1,1 @@
+pyinstaller -F -w --ico=main.ico Call_Ui_SerialPort1.py 
