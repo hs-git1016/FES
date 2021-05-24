@@ -8,7 +8,7 @@ from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWebEngineWidgets import *
 from Ui_SerialPort_1 import Ui_Form
-
+import binascii
 class MyMainWindow(QMainWindow, Ui_Form):
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
@@ -150,7 +150,28 @@ class MyMainWindow(QMainWindow, Ui_Form):
         #发送信息
         if len(txData) == 0 : 
             return
-        self.com.write(txData.encode('UTF-8'))
+        if self.hexSending_checkBox.isChecked() == False:
+            self.com.write(txData.encode('UTF-8'))
+        else:
+            Data = txData.replace(' ', '')
+            # 如果16进制不是偶数个字符, 去掉最后一个, [ ]左闭右开
+            if len(Data)%2 == 1:
+                Data = Data[0:len(Data)-1]
+            # 如果遇到非16进制字符
+            if Data.isalnum() is False:
+                QMessageBox.critical(self, '错误', '包含非十六进制数')
+            try:
+                hexData = binascii.a2b_hex(Data)
+                print(hexData)
+            except:
+                QMessageBox.critical(self, '错误', '转换编码错误')
+                return
+            # 发送16进制数据, 发送格式如 ‘31 32 33 41 42 43’, 代表'123ABC'
+            try:
+                self.com.write(hexData) 
+            except:
+                QMessageBox.critical(self, '异常', '十六进制发送错误')
+                return
 
     # 串口接收数据
     def Com_Receive_Data(self):
